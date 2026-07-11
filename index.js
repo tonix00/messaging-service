@@ -1,4 +1,3 @@
-// index.js - just wires everything together!
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
@@ -18,6 +17,9 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
+
+// Make io accessible in routes
+app.set("io", io);
 
 io.use(authMiddleware);
 io.on("connection", (socket) => messageHandler(io, socket));

@@ -87,4 +87,35 @@ router.get("/:matchId/unread", verifyToken, async (req, res) => {
   }
 });
 
+// POST /messages/notify - called by Spring Boot to push instant notifications
+router.post("/notify", async (req, res) => {
+  try {
+    const { recipientId, senderId, type, message } = req.body;
+
+    // Get the io instance
+    const io = req.app.get("io");
+
+    // Push to recipient's room instantly!
+    io.to(`user_${recipientId}`).emit("notification", {
+      type: type,
+      message: message,
+      senderId: senderId,
+      timestamp: new Date(),
+    });
+
+    console.log(`🔔 Notification pushed to user_${recipientId}: ${message}`);
+
+    res.json({
+      success: true,
+      message: "Notification pushed!",
+    });
+  } catch (err) {
+    console.error("Error pushing notification:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to push notification!",
+    });
+  }
+});
+
 module.exports = router;

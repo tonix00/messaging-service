@@ -84,6 +84,10 @@
           });
         });
 
+        socket.on("notification", (data) => {
+          log(`🔔 INSTANT NOTIFICATION: ${data.message} (${data.type})`);
+        });
+
         socket.on("error", (err) => {
           log(`❌ Error: ${err.message}`);
         });
