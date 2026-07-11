@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Messaging Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h2>Messaging Service Test</h2>
+
+    <div>
+      <input
+        id="token"
+        placeholder="Paste JWT token here"
+        style="width: 500px"
+      />
+      <button onclick="connect()">Connect</button>
+    </div>
+
+    <br />
+
+    <div>
+      <input id="receiverId" placeholder="Receiver ID" />
+      <input id="matchId" placeholder="Match ID" />
+      <input id="message" placeholder="Type a message" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <br />
+
+    <div>
+      <button onclick="getHistory()">Get Chat History</button>
+    </div>
+
+    <br />
+
+    <div
+      id="logs"
+      style="
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+      "
+    >
+      <p>Logs will appear here...</p>
+    </div>
+
+    <script>
+      let socket;
+
+      function log(msg) {
+        const logs = document.getElementById("logs");
+        logs.innerHTML += `<p>${new Date().toLocaleTimeString()} — ${msg}</p>`;
+        logs.scrollTop = logs.scrollHeight;
+      }
+
+      function connect() {
+        const token = document.getElementById("token").value;
+
+        socket = io("http://localhost:3000", {
+          auth: { token: token },
+        });
+
+        socket.on("connect", () => {
+          log("✅ Connected to messaging service!");
+        });
+
+        socket.on("connect_error", (err) => {
+          log(`❌ Connection error: ${err.message}`);
+        });
+
+        socket.on("receive_message", (data) => {
+          log(`💬 New message received: ${data.content}`);
+        });
+
+        socket.on("message_sent", (data) => {
+          log(`✅ Message sent successfully!`);
+        });
+
+        socket.on("chat_history", (messages) => {
+          log(`📜 Chat history: ${messages.length} messages`);
+          messages.forEach((m) => {
+            log(`&nbsp;&nbsp;- ${m.content}`);
+          });
+        });
+
+        socket.on("error", (err) => {
+          log(`❌ Error: ${err.message}`);
+        });
+      }
+
+      function sendMessage() {
+        const receiverId = parseInt(
+          document.getElementById("receiverId").value,
+        );
+        const matchId = parseInt(document.getElementById("matchId").value);
+        const content = document.getElementById("message").value;
+
+        socket.emit("send_message", { receiverId, matchId, content });
+        log(`📤 Sending message: ${content}`);
+      }
+
+      function getHistory() {
+        const matchId = parseInt(document.getElementById("matchId").value);
+        socket.emit("get_messages", { matchId });
+        log(`📜 Getting chat history for match: ${matchId}`);
+      }
+    </script>
+  </body>
+</html>
